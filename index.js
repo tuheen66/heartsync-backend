@@ -128,8 +128,14 @@ async function run() {
     // biodata api
 
     app.get("/biodata", async (req, res) => {
-      const biodata = req.body;
       const result = await biodataCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/biodata/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await biodataCollection.findOne(query);
       res.send(result);
     });
 
