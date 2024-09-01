@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ async function run() {
 
     const biodataCollection = client.db("matrimony").collection("biodata");
     const userCollection = client.db("matrimony").collection("users");
+    const favoriteCollection = client.db("matrimony").collection("favorites");
 
     // jwt api
     app.post("/jwt", async (req, res) => {
@@ -135,11 +137,12 @@ async function run() {
     app.get("/biodata/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
+
       const result = await biodataCollection.findOne(query);
       res.send(result);
     });
 
-    app.get("/biodata/:email", async (req, res) => {
+    app.get("/biodatas/:email", async (req, res) => {
       const query = { email: req.params.email };
       const result = await biodataCollection.findOne(query);
       res.send(result);
@@ -201,6 +204,40 @@ async function run() {
         biodata,
         options
       );
+      res.send(result);
+    });
+
+    // favorite api
+
+    app.get("/favorite", async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const query = { email: email };
+      const result = await favoriteCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/favorite", async (req, res) => {
+      const favBiodata = req.body;
+      console.log(favBiodata);
+
+      const query = { biodataId: favBiodata.biodataId };
+      const existingBiodata = await favoriteCollection.findOne(query);
+
+      if (existingBiodata) {
+        return res.send({
+          message: "Biodata already added to the favorite list",
+          insertedId: null,
+        });
+      }
+      const result = await favoriteCollection.insertOne(favBiodata);
+      res.send(result);
+    });
+
+    app.delete("/favorite/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await favoriteCollection.deleteOne(query);
       res.send(result);
     });
 
