@@ -241,6 +241,13 @@ async function run() {
       res.send(result);
     });
 
+    // similar biodata api
+
+    app.get("/similar", async (req, res) => {
+      const result = await biodataCollection.find().toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
