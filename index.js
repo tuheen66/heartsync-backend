@@ -120,7 +120,7 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          role: "premium",
+          membership: "premium",
         },
       };
       const result = await userCollection.updateOne(filter, updateDoc);
@@ -134,10 +134,22 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/premium-biodata", async (req, res) => {
+      const filter = req.query;
+      console.log(filter);
+      const query = { status: "premium" };
+      const options = {
+        sort: {
+          age: filter.sort === "asc" ? 1 : -1,
+        },
+      };
+      const result = await biodataCollection.find(query, options).toArray();
+      res.send(result);
+    });
+
     app.get("/biodata/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-
       const result = await biodataCollection.findOne(query);
       res.send(result);
     });
@@ -170,6 +182,52 @@ async function run() {
       };
 
       const result = await biodataCollection.insertOne(newInfo);
+      res.send(result);
+    });
+
+    app.patch("/biodata/premium/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      console.log(filter);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: "premium-request",
+        },
+      };
+
+      const query = { biodataId: biodata.biodataId };
+      const existingBiodata = await biodataCollection.findOne(query);
+
+      if (existingBiodata) {
+        return res.send({
+          message: "Biodata already made premium",
+          insertedId: null,
+        });
+      }
+      const result = await biodataCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    app.patch("/biodata/appPremium/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      console.log(filter);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: "premium",
+        },
+      };
+      const result = await biodataCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
