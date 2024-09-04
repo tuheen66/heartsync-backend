@@ -134,10 +134,35 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/search-biodata", async (req, res) => {
+      const { gender, minAge, maxAge, permaDivision } = req.query;
+
+      let query = {};
+
+      if (gender) {
+        query.gender = { $regex: gender };
+      }
+
+      if (minAge && maxAge) {
+        query.age = { $gte: minAge, $lte: maxAge };
+      } else if (minAge) {
+        query.age = { $gte: minAge };
+      } else if (maxAge) {
+        query.age = { $lte: maxAge };
+      }
+
+      if (permaDivision) {
+        query.permanentDivision = { $regex: permaDivision };
+      }
+
+      const result = await biodataCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.get("/premium-biodata", async (req, res) => {
       const filter = req.query;
-      console.log(filter);
-      const query = { status: "premium" };
+
+      const query = {};
       const options = {
         sort: {
           age: filter.sort === "asc" ? 1 : -1,
@@ -196,7 +221,7 @@ async function run() {
         },
       };
 
-      const query = { biodataId: biodata.biodataId };
+      const query = { status: "premium" };
       const existingBiodata = await biodataCollection.findOne(query);
 
       if (existingBiodata) {
