@@ -30,6 +30,9 @@ async function run() {
     const biodataCollection = client.db("matrimony").collection("biodata");
     const userCollection = client.db("matrimony").collection("users");
     const favoriteCollection = client.db("matrimony").collection("favorites");
+    const contactRequestCollection = client
+      .db("matrimony")
+      .collection("contactRequests");
 
     // jwt api
     app.post("/jwt", async (req, res) => {
@@ -294,7 +297,7 @@ async function run() {
 
     app.get("/favorite", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
+
       const query = { email: email };
       const result = await favoriteCollection.find(query).toArray();
       res.send(result);
@@ -328,6 +331,55 @@ async function run() {
 
     app.get("/similar", async (req, res) => {
       const result = await biodataCollection.find().toArray();
+      res.send(result);
+    });
+
+    // contact request apis
+
+    app.get("/contact-requests", async (req, res) => {
+      const result = await contactRequestCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/contact-request", async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const query = { userEmail: email };
+      const result = await contactRequestCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.patch("/contact-request", async (req, res) => {
+      const filter = req.body;
+      console.log(filter);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: "pending",
+        },
+      };
+      const result = await contactRequestCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    app.patch("/contact-requests/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      console.log(filter);
+      // const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        },
+      };
+      const result = await contactRequestCollection.updateOne(
+        filter,
+        updateDoc
+      );
       res.send(result);
     });
 
