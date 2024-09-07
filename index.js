@@ -139,9 +139,17 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/search-biodata", async (req, res) => {
-      const { gender, minAge, maxAge, permaDivision } = req.query;
+    app.get("/biodataCount", async (req, res) => {
+      const count = await biodataCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
 
+    app.get("/searched-biodata", async (req, res) => {
+      const { gender, minAge, maxAge, permaDivision } = req.query;
+      console.log(req.query);
+
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
       let query = {};
 
       if (gender) {
@@ -160,7 +168,11 @@ async function run() {
         query.permanentDivision = { $regex: permaDivision };
       }
 
-      const result = await biodataCollection.find(query).toArray();
+      const result = await biodataCollection
+        .find(query)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
 
@@ -399,6 +411,11 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    app.get("/payments", async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
     });
 
     app.post("/payments", async (req, res) => {
