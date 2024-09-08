@@ -31,6 +31,7 @@ async function run() {
     const userCollection = client.db("matrimony").collection("users");
     const favoriteCollection = client.db("matrimony").collection("favorites");
     const paymentCollection = client.db("matrimony").collection("payments");
+    const marriageCollection = client.db("matrimony").collection("marriages");
 
     const contactRequestCollection = client
       .db("matrimony")
@@ -421,6 +422,31 @@ async function run() {
     app.post("/payments", async (req, res) => {
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment);
+      res.send(result);
+    });
+
+    // marriage info apis
+
+    app.get("/marriage", async (req, res) => {
+      const result = await marriageCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.patch("/marriage", async (req, res) => {
+      const marriage = req.body;
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          marriage_date: new Date(),
+          
+        },
+      };
+      const result = await marriageCollection.updateOne(
+        marriage,
+        updateDoc,
+        options
+      );
+
       res.send(result);
     });
 
