@@ -190,9 +190,17 @@ async function run() {
       res.send(result);
     });
 
+    
     app.get("/biodata/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
+      const result = await biodataCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get("/edit-biodata/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
       const result = await biodataCollection.findOne(query);
       res.send(result);
     });
@@ -228,7 +236,58 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/biodata/premium/:id", async (req, res) => {
+    app.put("/new-biodatas/:id", async (req, res) => {
+      const id = req.params.id;
+      const {
+        name,
+        photo,
+        gender,
+        birth_date,
+        height,
+        weight,
+        partner_height,
+        partner_weight,
+        age,
+        partner_age,
+        occupation,
+        race,
+        father_name,
+        mother_name,
+        permanentDivision,
+        presentDivision,
+        email,
+        phone,
+      } = req.body;
+
+      const updatedDocument = {
+        name,
+        photo,
+        gender,
+        birth_date,
+        height,
+        weight,
+        partner_height,
+        partner_weight,
+        age,
+        partner_age,
+        occupation,
+        race,
+        father_name,
+        mother_name,
+        permanentDivision,
+        presentDivision,
+        email,
+        phone,
+      };
+      const query = { _id: new ObjectId(id) };
+      const options = {
+        $set: updatedDocument,
+      };
+      const result = await biodataCollection.updateOne(query, options);
+      res.send(result);
+    });
+
+    app.patch("/prem-biodata/premium/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       console.log(filter);
@@ -239,15 +298,6 @@ async function run() {
         },
       };
 
-      const query = { status: "premium" };
-      const existingBiodata = await biodataCollection.findOne(query);
-
-      if (existingBiodata) {
-        return res.send({
-          message: "Biodata already made premium",
-          insertedId: null,
-        });
-      }
       const result = await biodataCollection.updateOne(
         filter,
         updateDoc,
@@ -428,7 +478,14 @@ async function run() {
     // marriage info apis
 
     app.get("/marriage", async (req, res) => {
-      const result = await marriageCollection.find().toArray();
+      const filter = req.query;
+      const query = {};
+      const options = {
+        sort: {
+          marriage_date: filter.sort === "asc" ? 1 : -1,
+        },
+      };
+      const result = await marriageCollection.find(query, options).toArray();
       res.send(result);
     });
 
@@ -438,7 +495,6 @@ async function run() {
       const updateDoc = {
         $set: {
           marriage_date: new Date(),
-          
         },
       };
       const result = await marriageCollection.updateOne(
