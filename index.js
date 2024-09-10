@@ -181,6 +181,7 @@ async function run() {
       const filter = req.query;
 
       const query = {};
+      
       const options = {
         sort: {
           age: filter.sort === "asc" ? 1 : -1,
@@ -324,39 +325,39 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/biodata/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateBiodata = req.body;
-      const biodata = {
-        $set: {
-          name: updateBiodata.name,
-          photo: updateBiodata.photo,
-          gender: updateBiodata.gender,
-          birth_date: updateBiodata.birth_date,
-          height: updateBiodata.height,
-          weight: updateBiodata.weight,
-          partner_height: updateBiodata.partner_height,
-          partner_weight: updateBiodata.partner_weight,
-          age: updateBiodata.age,
-          partner_age: updateBiodata.partner_age,
-          occupation: updateBiodata.occupation,
-          race: updateBiodata.race,
-          father_name: updateBiodata.father_name,
-          mother_name: updateBiodata.mother_name,
-          permanentDivision: updateBiodata.permanentDivision,
-          presentDivision: updateBiodata.presentDivision,
-          phone: updateBiodata.phone,
-        },
-      };
-      const result = await biodataCollection.updateOne(
-        filter,
-        biodata,
-        options
-      );
-      res.send(result);
-    });
+    // app.put("/biodata/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const filter = { _id: new ObjectId(id) };
+    //   const options = { upsert: true };
+    //   const updateBiodata = req.body;
+    //   const biodata = {
+    //     $set: {
+    //       name: updateBiodata.name,
+    //       photo: updateBiodata.photo,
+    //       gender: updateBiodata.gender,
+    //       birth_date: updateBiodata.birth_date,
+    //       height: updateBiodata.height,
+    //       weight: updateBiodata.weight,
+    //       partner_height: updateBiodata.partner_height,
+    //       partner_weight: updateBiodata.partner_weight,
+    //       age: updateBiodata.age,
+    //       partner_age: updateBiodata.partner_age,
+    //       occupation: updateBiodata.occupation,
+    //       race: updateBiodata.race,
+    //       father_name: updateBiodata.father_name,
+    //       mother_name: updateBiodata.mother_name,
+    //       permanentDivision: updateBiodata.permanentDivision,
+    //       presentDivision: updateBiodata.presentDivision,
+    //       phone: updateBiodata.phone,
+    //     },
+    //   };
+    //   const result = await biodataCollection.updateOne(
+    //     filter,
+    //     biodata,
+    //     options
+    //   );
+    //   res.send(result);
+    // });
 
     // favorite api
 
@@ -445,6 +446,13 @@ async function run() {
         filter,
         updateDoc
       );
+      res.send(result);
+    });
+
+    app.delete("/contacts-request/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await contactRequestCollection.deleteOne(query);
       res.send(result);
     });
 
