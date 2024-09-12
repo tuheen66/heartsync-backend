@@ -8,7 +8,14 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://heartsync-5b928.web.app",
+      "https://heartsync-5b928.firebaseapp.com",
+    ],
+  })
+);
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.1gnzeig.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -25,7 +32,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const biodataCollection = client.db("matrimony").collection("biodata");
     const userCollection = client.db("matrimony").collection("users");
@@ -47,7 +54,6 @@ async function run() {
     });
 
     const verifyToken = (req, res, next) => {
-      // console.log("inside verify token", req.headers.authorization);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "unauthorized access" });
       }
@@ -147,7 +153,6 @@ async function run() {
 
     app.get("/searched-biodata", async (req, res) => {
       const { gender, minAge, maxAge, permaDivision } = req.query;
-      console.log(req.query);
 
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
@@ -181,7 +186,7 @@ async function run() {
       const filter = req.query;
 
       const query = {};
-      
+
       const options = {
         sort: {
           age: filter.sort === "asc" ? 1 : -1,
@@ -191,7 +196,6 @@ async function run() {
       res.send(result);
     });
 
-    
     app.get("/biodata/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -225,7 +229,6 @@ async function run() {
       }
 
       const totalBiodata = await biodataCollection.countDocuments();
-      console.log("biodata count", totalBiodata);
 
       let newBiodataId = totalBiodata + 1;
       const newInfo = {
@@ -291,7 +294,7 @@ async function run() {
     app.patch("/prem-biodata/premium/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-      console.log(filter);
+
       const options = { upsert: true };
       const updateDoc = {
         $set: {
@@ -310,7 +313,7 @@ async function run() {
     app.patch("/biodata/appPremium/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-      console.log(filter);
+
       const options = { upsert: true };
       const updateDoc = {
         $set: {
@@ -325,40 +328,6 @@ async function run() {
       res.send(result);
     });
 
-    // app.put("/biodata/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: new ObjectId(id) };
-    //   const options = { upsert: true };
-    //   const updateBiodata = req.body;
-    //   const biodata = {
-    //     $set: {
-    //       name: updateBiodata.name,
-    //       photo: updateBiodata.photo,
-    //       gender: updateBiodata.gender,
-    //       birth_date: updateBiodata.birth_date,
-    //       height: updateBiodata.height,
-    //       weight: updateBiodata.weight,
-    //       partner_height: updateBiodata.partner_height,
-    //       partner_weight: updateBiodata.partner_weight,
-    //       age: updateBiodata.age,
-    //       partner_age: updateBiodata.partner_age,
-    //       occupation: updateBiodata.occupation,
-    //       race: updateBiodata.race,
-    //       father_name: updateBiodata.father_name,
-    //       mother_name: updateBiodata.mother_name,
-    //       permanentDivision: updateBiodata.permanentDivision,
-    //       presentDivision: updateBiodata.presentDivision,
-    //       phone: updateBiodata.phone,
-    //     },
-    //   };
-    //   const result = await biodataCollection.updateOne(
-    //     filter,
-    //     biodata,
-    //     options
-    //   );
-    //   res.send(result);
-    // });
-
     // favorite api
 
     app.get("/favorite", async (req, res) => {
@@ -369,11 +338,14 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/favorite", async (req, res) => {
+    app.post("/favorites", async (req, res) => {
       const favBiodata = req.body;
-      console.log(favBiodata);
 
-      const query = { biodataId: favBiodata.biodataId };
+      const query = {
+        biodataId: favBiodata.biodataId,
+        email: favBiodata.email,
+      };
+
       const existingBiodata = await favoriteCollection.findOne(query);
 
       if (existingBiodata) {
@@ -409,7 +381,7 @@ async function run() {
 
     app.get("/contact-request", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
+
       const query = { userEmail: email };
       const result = await contactRequestCollection.find(query).toArray();
       res.send(result);
@@ -417,7 +389,18 @@ async function run() {
 
     app.patch("/contact-request", async (req, res) => {
       const filter = req.body;
-      console.log(filter);
+
+      const query = { biodataId: filter.biodataId, email: filter.email };
+
+      const existingBiodata = await contactRequestCollection.findOne(query);
+
+      if (existingBiodata) {
+        return res.send({
+          message: "Biodata already added to the contact request list",
+          insertedId: null,
+        });
+      }
+
       const options = { upsert: true };
       const updateDoc = {
         $set: {
@@ -435,7 +418,6 @@ async function run() {
     app.patch("/contact-requests/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-      console.log(filter);
 
       const updateDoc = {
         $set: {
@@ -461,7 +443,7 @@ async function run() {
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
-      console.log(amount, " amount inside the intent");
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
@@ -479,6 +461,18 @@ async function run() {
 
     app.post("/payments", async (req, res) => {
       const payment = req.body;
+
+      const query = { biodataId: payment.biodataId, email: payment.email };
+
+      const existingBiodata = await paymentCollection.findOne(query);
+
+      if (existingBiodata) {
+        return res.send({
+          message: "Biodata already added to the contact request list",
+          insertedId: null,
+        });
+      }
+
       const result = await paymentCollection.insertOne(payment);
       res.send(result);
     });
@@ -515,10 +509,10 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     //await client.close();
