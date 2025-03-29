@@ -10,10 +10,7 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(
   cors({
-    origin: [
-      "https://heartsync-5b928.web.app",
-      "https://heartsync-5b928.firebaseapp.com",
-    ],
+    origin: "http://localhost:5173",
   })
 );
 app.use(express.json());
