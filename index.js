@@ -36,6 +36,7 @@ async function run() {
     const favoriteCollection = client.db("matrimony").collection("favorites");
     const paymentCollection = client.db("matrimony").collection("payments");
     const marriageCollection = client.db("matrimony").collection("marriages");
+    const blogCollection = client.db("matrimony").collection("blogs");
 
     const contactRequestCollection = client
       .db("matrimony")
@@ -503,6 +504,26 @@ async function run() {
       );
 
       res.send(result);
+    });
+
+    // Blogs
+
+    app.get("/blogs", async (req, res) => {
+      const result = await blogCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/blogs/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await blogCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.post("/blogs", async (req, res) => {
+      const blog = req.body;
+      const result = await blogCollection.insertOne(blog);
+      return result;
     });
 
     // Send a ping to confirm a successful connection
